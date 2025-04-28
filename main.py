@@ -13,7 +13,7 @@ class Sudoku:
         if domains is not None:
             self.grid = domains
         else:
-            self.grid = np.ndarray((9, 9), dtype=object)
+            self.grid = np.ndarray((9, 9), dtype=set)
             for x in [(i, j) for i in range(9) for j in range(9)]:
                 if self.initial_grid[x] != 0:
                     self.grid[x] = {int(self.initial_grid[x])}
@@ -47,8 +47,9 @@ class Sudoku:
         string += "╰───────┴───────┴───────╯"
         return string
 
-    def solve(self):
-        self.grid = self.ac3(self.grid)
+    def solve(self) -> bool:
+        if self.ac3(self.grid) is False:
+            return False
 
         # TODO:
         #  - heuristics (MRV, LCV)
@@ -61,7 +62,7 @@ class Sudoku:
                 if len(self.grid[cell]) == 0:
                     return False
 
-                to_remove = []
+                to_remove = set()
 
                 # if the cell has more than one possibility, try each one
                 # use ac3 to reduce the search space
@@ -71,25 +72,23 @@ class Sudoku:
 
                     new_sudoku = Sudoku(self.initial_grid, new_grid)
 
-                    new_sudoku = new_sudoku.solve()
-                    if new_sudoku is False:
-                        to_remove.append(num)
+                    if new_sudoku.solve() is False:
+                        to_remove.add(num)
                     else:
-                        return new_sudoku
+                        self.grid = new_sudoku.grid
+                        return True
 
-                # remove the numbers that didn't work
-                for num in to_remove:
-                    self.grid[cell].remove(num)
-        return self
+                self.grid[cell] -= to_remove
+        return True
 
     @staticmethod
-    def ac3(domains):
+    def ac3(domains: np.ndarray[set[int]]) -> bool:
         """
         AC-3 algorithm for arc consistency
         https://en.wikipedia.org/wiki/AC-3_algorithm
 
-        :param domains: domains of the variables
-        :return:
+        :param domains: Domains of the variables
+        :return: True if the domains are arc consistent, False otherwise
         """
 
         def r2(x: Tuple[int, int], y: Tuple[int, int]):
@@ -109,15 +108,14 @@ class Sudoku:
             """
 
             change = False
-            to_remove = []
+            to_remove = set()
 
             for vx in domains[x]:
                 if not any(vx != vy for vy in domains[y]):  # TODO: add a generic constraint check
-                    to_remove.append(vx)
+                    to_remove.add(vx)
                     change = True
 
-            for vx in to_remove:
-                domains[x].remove(vx)
+            domains[x] -= to_remove
 
             return change
 
@@ -132,7 +130,7 @@ class Sudoku:
                 for z in X:
                     if z != y and r2(z, x):
                         worklist.append((z, x))
-        return domains
+        return True
 
 
 def main():
@@ -149,7 +147,10 @@ def main():
     ]
 
     sudoku = Sudoku(sudoku)
-    print(f'{sudoku.solve():color}')
+    if sudoku.solve():
+        print(f'{sudoku:color}')
+    else:
+        print("No solution found.")
 
 
 if __name__ == '__main__':
