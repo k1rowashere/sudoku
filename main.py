@@ -1,28 +1,27 @@
 from enum import Enum
-
 import numpy as np
 from typing import List, Tuple
-import copy
 
 
 class Sudoku:
-    def __init__(self, initial_grid: List[List[int]] | np.ndarray[(9, 9), int] = None,
-                 domains: np.ndarray[(9, 9), set[int]] = None):
+    def __init__(self, initial_grid: List[List[int]] | np.ndarray[(9, 9), np.uint8] = None,
+                 grid: np.ndarray[(9, 9), np.uint16] = None):
         self.initial_grid = (
             initial_grid if isinstance(initial_grid, np.ndarray) else
-            np.array(initial_grid, np.uint8) if isinstance(initial_grid, list) else
-            None
+            np.array(initial_grid, np.uint16) if isinstance(initial_grid, list) else
+            np.zeros((9, 9), dtype=np.uint16)
         )
-        self.grid: np.ndarray[(9, 9), set[int]]
-        if domains is not None:
-            self.grid = domains
+        self.grid: np.ndarray[(9, 9), np.uint16]
+
+        if grid is not None:
+            self.grid = grid
         else:
-            self.grid = np.ndarray((9, 9), dtype=set)
+            self.grid = np.ndarray((9, 9), dtype=np.uint16)
             for x in [(i, j) for i in range(9) for j in range(9)]:
                 if self.initial_grid[x] != 0:
-                    self.grid[x] = {int(self.initial_grid[x])}
+                    self.grid[x] = 1 << (self.initial_grid[x] - 1)
                 else:
-                    self.grid[x] = {i for i in range(1, 10)}
+                    self.grid[x] = 0b1_1111_1111
 
     def __str__(self):
         return self.__format__(self)
@@ -39,8 +38,8 @@ class Sudoku:
                         string += f"\033[1;31m{self.initial_grid[i, j]}\033[0m"
                     else:
                         string += str(self.initial_grid[i, j])
-                elif len(self.grid[i, j]) == 1:
-                    string += str(list(self.grid[i, j])[0])
+                elif self.grid[i, j].bit_count() == 1:
+                    string += str(int(self.grid[i, j]).bit_length())
                 else:
                     string += '_'
                 string += ' '
@@ -73,10 +72,10 @@ class Sudoku:
 
                 solutions = []
 
-                # if the cell has more than one possibility, try each one
-                for num in cell_values:
-                    new_grid = copy.deepcopy(self.grid)
-                    new_grid[cell] = {num}
+                # Try each possibility
+                for num in [k + 1 for k in range(9) if self.grid[cell] & (1 << k)]:
+                    new_grid = self.grid.copy()
+                    new_grid[cell] = 1 << (num - 1)
                     new_sudoku = Sudoku(self.initial_grid, new_grid)
                     if new_sudoku.solve() != Sudoku.SolutionState.NoSolution:
                         solutions.append(new_sudoku.grid)
@@ -108,7 +107,7 @@ class Sudoku:
         """
 
         def r2(x: Tuple[int, int], y: Tuple[int, int]):
-            return (x[0] != y[0] or x[1] != y[1]) and (
+            return (x != y) and (
                     (x[0] == y[0]) or  # same row
                     (x[1] == y[1]) or  # same column
                     (x[0] // 3 == y[0] // 3 and x[1] // 3 == y[1] // 3)  # same box
@@ -117,10 +116,11 @@ class Sudoku:
         def arc_reduce(x, y):
             """
             Arc reduce the domain of x with respect to y
+            Adapted for Sudoku using bit operations
 
             :param x: variable x
             :param y: variable y
-            :return:
+            :return: True if domain of x changed
             """
 
             change = False
@@ -149,8 +149,22 @@ class Sudoku:
         return True
 
 
+def from_string(string: str) -> Sudoku:
+    board = np.ndarray((9, 9), dtype=np.uint16)
+    for i, ch in enumerate(string):
+        if ch == ' ':
+            continue
+        if ch == '.':
+            board.flat[i] = 0
+        else:
+            board.flat[i] = int(ch)
+
+    return Sudoku(board)
+
+
 def main():
-    sudoku = [
+    # given in assignment pdf:
+    sudoku = Sudoku([
         [7, 9, 0, 0, 1, 3, 6, 0, 0],
         [4, 0, 0, 0, 7, 0, 3, 0, 0],
         [1, 0, 0, 2, 4, 0, 9, 7, 5],
@@ -160,9 +174,17 @@ def main():
         [6, 0, 1, 0, 0, 2, 0, 5, 3],
         [3, 0, 0, 0, 0, 0, 4, 0, 9],
         [0, 2, 4, 0, 3, 5, 0, 0, 0]
-    ]
+    ])
 
-    sudoku = Sudoku(sudoku)
+    # very slow cases:
+    sudoku = from_string("4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......")
+    sudoku = from_string("..............3.85..1.2.......5.7.....4...1...9.......5......73..2.1........4...9")
+    # sudoku = from_string(".....5.8....6.1.43..........1.5........1.6...3.......553.....61........4.........")
+    # sudoku = from_string("9..8...........5............2..1...3.1.....6....4...7.7.86.........3.1..4.....2..")
+
+    print(f"{sudoku:color}")
+    print("-" * 25)
+
     match sudoku.solve():
         case Sudoku.SolutionState.NoSolution:
             print("No solution")
@@ -171,6 +193,7 @@ def main():
             print(f'{sudoku:color}')
         case Sudoku.SolutionState.MultipleSolutions:
             print("Multiple solutions")
+            print(f'{sudoku:color}')
 
 
 if __name__ == '__main__':
