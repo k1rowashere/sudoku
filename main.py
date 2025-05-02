@@ -62,12 +62,11 @@ class Sudoku:
 
         # TODO:
         #  - heuristics (MRV, LCV)
-        #  - handle multiple solutions
         for i in range(9):
             for j in range(9):
                 cell = (i, j)
                 cell_values = self.grid[cell]
-                if len(cell_values) == 1:
+                if cell_values.bit_count() == 1:
                     continue
 
                 solutions = []
@@ -89,7 +88,7 @@ class Sudoku:
                     case _:
                         # merge the solutions
                         for x in [(i, j) for i in range(9) for j in range(9)]:
-                            self.grid[x] = set()
+                            self.grid[x] = 0
                             for solution in solutions:
                                 self.grid[x] |= solution[x]
                         return Sudoku.SolutionState.MultipleSolutions
@@ -122,18 +121,12 @@ class Sudoku:
             :param y: variable y
             :return: True if domain of x changed
             """
+            if domains[y].bit_count() == 1 \
+                    and domains[x] & domains[y]:
+                domains[x] &= ~(domains[y])
+                return True
 
-            change = False
-            to_remove = set()
-
-            for vx in domains[x]:
-                if not any(vx != vy for vy in domains[y]):
-                    to_remove.add(vx)
-                    change = True
-
-            domains[x] -= to_remove
-
-            return change
+            return False
 
         X = [(i, j) for i in range(9) for j in range(9)]
         worklist = [(x, y) for x in X for y in X if r2(x, y)]
@@ -190,7 +183,7 @@ def main():
             print("No solution")
         case Sudoku.SolutionState.UniqueSolution:
             print("Unique solution")
-            print(f'{sudoku:color}')
+            print(f"{sudoku:color}")
         case Sudoku.SolutionState.MultipleSolutions:
             print("Multiple solutions")
             print(f'{sudoku:color}')
