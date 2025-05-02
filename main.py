@@ -1,15 +1,19 @@
+from enum import Enum
+
 import numpy as np
 from typing import List, Tuple
+import copy
 
 
 class Sudoku:
-    def __init__(self, initial_grid: List[List[int]] | np.ndarray = None, domains: np.ndarray = None):
+    def __init__(self, initial_grid: List[List[int]] | np.ndarray[(9, 9), int] = None,
+                 domains: np.ndarray[(9, 9), set[int]] = None):
         self.initial_grid = (
             initial_grid if isinstance(initial_grid, np.ndarray) else
             np.array(initial_grid, np.uint8) if isinstance(initial_grid, list) else
             None
         )
-        self.grid: np.ndarray[set[int]]
+        self.grid: np.ndarray[(9, 9), set[int]]
         if domains is not None:
             self.grid = domains
         else:
@@ -47,9 +51,15 @@ class Sudoku:
         string += "╰───────┴───────┴───────╯"
         return string
 
-    def solve(self) -> bool:
+    class SolutionState(Enum):
+        NoSolution = 0
+        UniqueSolution = 1
+        MultipleSolutions = 2,
+
+    def solve(self) -> SolutionState:
+        # use ac3 to reduce the search space
         if self.ac3(self.grid) is False:
-            return False
+            return Sudoku.SolutionState.NoSolution
 
         # TODO:
         #  - heuristics (MRV, LCV)
@@ -57,32 +67,38 @@ class Sudoku:
         for i in range(9):
             for j in range(9):
                 cell = (i, j)
-                if len(self.grid[cell]) == 1:
+                cell_values = self.grid[cell]
+                if len(cell_values) == 1:
                     continue
-                if len(self.grid[cell]) == 0:
-                    return False
 
-                to_remove = set()
+                solutions = []
 
                 # if the cell has more than one possibility, try each one
-                # use ac3 to reduce the search space
-                for num in self.grid[cell]:
-                    new_grid = self.grid.copy()
+                for num in cell_values:
+                    new_grid = copy.deepcopy(self.grid)
                     new_grid[cell] = {num}
-
                     new_sudoku = Sudoku(self.initial_grid, new_grid)
+                    if new_sudoku.solve() != Sudoku.SolutionState.NoSolution:
+                        solutions.append(new_sudoku.grid)
 
-                    if new_sudoku.solve() is False:
-                        to_remove.add(num)
-                    else:
-                        self.grid = new_sudoku.grid
-                        return True
+                match len(solutions):
+                    case 0:
+                        return Sudoku.SolutionState.NoSolution
+                    case 1:
+                        self.grid = solutions[0]
+                        return Sudoku.SolutionState.UniqueSolution
+                    case _:
+                        # merge the solutions
+                        for x in [(i, j) for i in range(9) for j in range(9)]:
+                            self.grid[x] = set()
+                            for solution in solutions:
+                                self.grid[x] |= solution[x]
+                        return Sudoku.SolutionState.MultipleSolutions
 
-                self.grid[cell] -= to_remove
-        return True
+        return Sudoku.SolutionState.UniqueSolution
 
     @staticmethod
-    def ac3(domains: np.ndarray[set[int]]) -> bool:
+    def ac3(domains: np.ndarray[(9, 9), set[int]]) -> bool:
         """
         AC-3 algorithm for arc consistency
         https://en.wikipedia.org/wiki/AC-3_algorithm
@@ -111,7 +127,7 @@ class Sudoku:
             to_remove = set()
 
             for vx in domains[x]:
-                if not any(vx != vy for vy in domains[y]):  # TODO: add a generic constraint check
+                if not any(vx != vy for vy in domains[y]):
                     to_remove.add(vx)
                     change = True
 
@@ -147,10 +163,14 @@ def main():
     ]
 
     sudoku = Sudoku(sudoku)
-    if sudoku.solve():
-        print(f'{sudoku:color}')
-    else:
-        print("No solution found.")
+    match sudoku.solve():
+        case Sudoku.SolutionState.NoSolution:
+            print("No solution")
+        case Sudoku.SolutionState.UniqueSolution:
+            print("Unique solution")
+            print(f'{sudoku:color}')
+        case Sudoku.SolutionState.MultipleSolutions:
+            print("Multiple solutions")
 
 
 if __name__ == '__main__':
