@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku</title>
+    <link href="../style.css" rel="stylesheet">
+    <script type="text/javascript" src="/eel.js"></script>
+    <script src="../app.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+<div class="flex gap-10 bg-white p-4 rounded-lg shadow-lg overflow-x-auto">
+    {#    <h1 class="text-2xl font-bold mb-4 text-center">Sudoku Board</h1>#}
+    <div id="sudoku-board"
+         class="sudoku-board overflow-hidden border-3 rounded-2xl grid grid-cols-9 grid-rows-9 gap-0 min-w-max mx-auto">
+        {% for _ in range(0, 9) %}
+            <div class="contents">
+                {% for _ in range(0, 9) %}
+                    <div class="sudoku-cell font-medium text-blue-700 text-xl w-12 h-12 border border-gray-400 relative flex items-center justify-center">
+                        <div></div>
+                        <div class="grid grid-cols-3 grid-rows-3 w-full h-full p-0.5 text-xs text-gray-500">
+                            {% for i in range(1, 10) %}
+                                <div class="hidden" id="cell-{{ i }}">{{ i }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-6 flex flex-col items-center space-y-4">
+        <!-- Numpad and Mode Selector -->
+        <div class="flex items-start space-x-4">
+            <!-- Numpad -->
+            <div class="grid grid-cols-3 gap-2">
+                {% for num in range(1, 10) %}
+                    <button class="num-btn active:scale-95 w-12 h-12 bg-gray-200 hover:bg-gray-300
+                                   rounded flex items-center justify-center text-xl font-medium"
+                            data-value="{{ num }}">
+                        {{ num }}
+                    </button>
+                {% endfor %}
+            </div>
+
+            <!-- Mode Selector -->
+            <div class="flex flex-col space-y-2">
+                {% set modes = ['final', 'pencil', 'edit'] %}
+                {% for mode in modes %}
+                    <label class="cursor-pointer">
+                        <input type="radio"
+                               name="sudoku-mode" value="{{ mode }}"
+                                {{ 'checked' if loop.first else '' }}
+                               class="hidden peer">
+                        <span class="w-12 h-12 rounded flex items-center justify-center
+                                    transition-colors peer-checked:bg-blue-500 peer-checked:text-white
+                                    peer-checked:hover:bg-blue-700 bg-gray-200 hover:bg-gray-300"
+                        >
+                            <img src="/static/images/{{ mode }}.png" alt="{{ mode }}" class="h-6 w-6">
+                        </span>
+                    </label>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- Action Buttons -->
+        <div class="flex space-x-2">
+            <button id="undo-btn"
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded flex items-center space-x-1"
+                    title="Undo">
+                <img src="/static/images/undo-icon.png" alt="Undo" class="h-5 w-5">
+                <span>Undo</span>
+            </button>
+            <button id="redo-btn"
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded flex items-center space-x-1"
+                    title="Redo">
+                <img src="/static/images/redo-icon.png" alt="Redo" class="h-5 w-5">
+                <span>Redo</span>
+            </button>
+            <button id="backspace-btn"
+                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded flex items-center space-x-1"
+                    title="Clear Cell">
+                <img src="/static/images/clear-icon.png" alt="Clear" class="h-5 w-5">
+                <span>Clear</span>
+            </button>
+        </div>
+
+        <!-- Game Controls -->
+        <div class="flex flex-wrap justify-center gap-2">
+            <div class="flex items-center space-x-2">
+                <label for="difficulty" class="text-sm font-medium">Difficulty:</label>
+                <select id="difficulty" class="border border-gray-300 rounded p-1 text-sm">
+                    {% for diff in ['easy', 'medium', 'hard'] %}
+                        <option value="{{ diff }}">{{ diff|capitalize }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% set control_buttons = [
+                ('New Game', 'bg-blue-500', 'hover:bg-blue-600'),
+                ('Input Puzzle', 'bg-green-500', 'hover:bg-green-600'),
+                ('Check Solution', 'bg-green-500', 'hover:bg-green-600'),
+                ('Clear Board', 'bg-gray-500', 'hover:bg-gray-600')
+            ] %}
+
+            {% for text, bg, hover in control_buttons %}
+                <button class="px-3 py-1 {{ bg }} text-white rounded {{ hover }} text-sm">
+                    {{ text }}
+                </button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+@import 'tailwindcss';
+
+@layer utilities {
+  .sudoku-board > div > div:nth-child(3n):not(:nth-child(9n)) {
+    @apply border-r-2 border-r-black;
+  }
+
+  .sudoku-board > div:nth-child(3n):not(:nth-child(9n)) > div {
+    @apply border-b-2 border-b-black;
+  }
+
+  .sudoku-board > div > div:first-child {
+    @apply border-l-0
+  }
+
+  .sudoku-board > div > div:last-child {
+    @apply border-r-0
+  }
+
+  .sudoku-board > div:first-child > div {
+    @apply border-t-0
+  }
+
+  .sudoku-board > div:last-child > div {
+    @apply border-b-0
+  }
+}
