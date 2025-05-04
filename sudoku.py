@@ -83,6 +83,23 @@ class Sudoku:
                 board.flat[i] = int(ch)
         return board
 
+    def to_string(self):
+        string = ""
+        for i in range(9):
+            for j in range(9):
+                if self.grid[i, j].bit_count() == 1:
+                    string += str(int(self.grid[i, j]).bit_length())
+                else:
+                    string += '.'
+        return string
+
+    def is_solved(self):
+        for i in range(9):
+            for j in range(9):
+                if self.grid[i, j].bit_count() != 1:
+                    return False
+        return self.ac3_optimized(self.grid)
+
     class SolutionState(Enum):
         NoSolution = 0
         UniqueSolution = 1
@@ -234,18 +251,18 @@ def main():
     print("-" * 25)
     start = time.time()
 
-    # if not sudoku.minimum_clues():
-    #     print("Not enough clues (>= 17, > 7 distinct digits)")
-    # else:
-    match sudoku.solve():
-        case Sudoku.SolutionState.NoSolution:
-            print("No solution")
-        case Sudoku.SolutionState.UniqueSolution:
-            print("Unique solution")
-            print(f"{sudoku:color}")
-        case Sudoku.SolutionState.MultipleSolutions:
-            print("Multiple solutions")
-            print(f'{sudoku:color}')
+    if not sudoku.minimum_clues():
+        print("Not enough clues (>= 17, > 7 distinct digits)")
+    else:
+        match sudoku.solve():
+            case Sudoku.SolutionState.NoSolution:
+                print("No solution")
+            case Sudoku.SolutionState.UniqueSolution:
+                print("Unique solution")
+                print(f"{sudoku:color}")
+            case Sudoku.SolutionState.MultipleSolutions:
+                print("Multiple solutions")
+                print(f'{sudoku:color}')
 
     print(f"Solution found in {time.time() - start:.2f}s")
 

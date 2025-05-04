@@ -24,4 +24,8 @@
   .sudoku-board > div:last-child > div {
     @apply border-b-0
   }
+
+  .sudoku-board .given-clue {
+    @apply text-gray-800 font-bold;
+  }
 }
