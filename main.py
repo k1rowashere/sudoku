@@ -1,4 +1,5 @@
 import eel
+from sudoku import Sudoku
 
 
 def main():
@@ -8,16 +9,23 @@ def main():
 
 @eel.expose
 def solve_sudoku(sudoku_string):
-    from sudoku import Sudoku
-
     sudoku = Sudoku(sudoku_string)
-    res = sudoku.solve()
-    return sudoku.to_string()
+    if not sudoku.minimum_clues():
+        return {'state': "minimumClues"}
+    else:
+        res = ""
+        match sudoku.solve():
+            case Sudoku.SolutionState.UniqueSolution:
+                res = "unique"
+            case Sudoku.SolutionState.NoSolution:
+                res = "noSolution"
+            case Sudoku.SolutionState.MultipleSolutions:
+                res = "multipleSolutions"
 
-    # if sudoku.is_solved():
-    #     return sudoku.to_string()
-    # else:
-    #     return "No solution"
+        return {
+            'state': res,
+            'solution': sudoku.grid.tolist()
+        }
 
 
 if __name__ == "__main__":

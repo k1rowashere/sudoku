@@ -91,13 +91,14 @@
 
         <div class="grid grid-cols-3 justify-center gap-2">
             {% set control_buttons = [
-                ('Check Solution', 'solve-btn', 'bg-blue-500', 'hover:bg-blue-600'),
-                ('Clear Board' , 'clear-all-btn', 'bg-gray-500', 'hover:bg-gray-600'),
-                ('Solve', 'solve-btn', 'bg-green-500', 'hover:bg-green-600')
+                ('Check Solution', 'check-btn', 'bg-blue-500', 'hover:bg-blue-600'),
+                ('Solve', 'solve-btn', 'bg-green-500', 'hover:bg-green-600'),
+                ('Clear Board' , 'clear-all-btn', 'bg-gray-500', 'hover:bg-gray-600')
             ] %}
 
             {% for text, id, bg, hover in control_buttons %}
-                <button id="{{ id }}" class="px-3 py-1 {{ bg }} text-white rounded {{ hover }} text-sm">
+                <button id="{{ id }}"
+                        class="px-3 py-1 cursor-pointer active:scale-95 {{ bg }} text-white rounded {{ hover }} text-sm">
                     {{ text }}
                 </button>
             {% endfor %}
@@ -117,7 +118,7 @@
                     </select>
                 </div>
                 <button id="generate-btn"
-                        class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
+                        class="px-3 py-1 cursor-pointer active:scale-95 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
                     Generate
                 </button>
             </div>
@@ -128,10 +129,11 @@
                        class="border border-gray-300 rounded p-1 text-sm w-full">
                 <div class="flex mt-auto justify-evenly w-full">
                     <button id="import-btn"
-                            class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
+                            class="px-3 py-1 cursor-pointer active:scale-95 bg-green-500 text-white rounded hover:bg-green-600 text-sm">
                         Import
                     </button>
-                    <button id="export-btn" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                    <button id="export-btn"
+                            class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
                         Export
                     </button>
                 </div>

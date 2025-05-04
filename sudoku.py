@@ -100,6 +100,24 @@ class Sudoku:
                     return False
         return self.ac3_optimized(self.grid)
 
+    def is_partial_solved(self):
+        """
+        :return: Checks if the current partial solution is correct
+        """
+        temp = Sudoku(self.initial_grid)
+        res = temp.solve()
+
+        if res == Sudoku.SolutionState.NoSolution:
+            return False
+
+        for i in range(9):
+            for j in range(9):
+                if self.grid[i, j].bit_count() == 1:
+                    if temp.grid[i, j] != self.grid[i, j]:
+                        return False
+
+        return True
+
     class SolutionState(Enum):
         NoSolution = 0
         UniqueSolution = 1
@@ -227,27 +245,28 @@ class Sudoku:
 
 def main():
     # given in assignment pdf:
-    # sudoku = Sudoku([
-    #     [7, 9, 0, 0, 1, 3, 6, 0, 0],
-    #     [4, 0, 0, 0, 7, 0, 3, 0, 0],
-    #     [1, 0, 0, 2, 4, 0, 9, 7, 5],
-    #     [5, 0, 0, 6, 0, 0, 2, 0, 7],
-    #     [0, 7, 0, 0, 0, 1, 8, 0, 0],
-    #     [8, 0, 6, 9, 2, 0, 5, 0, 0],
-    #     [6, 0, 1, 0, 0, 2, 0, 5, 3],
-    #     [3, 0, 0, 0, 0, 0, 4, 0, 9],
-    #     [0, 2, 4, 0, 3, 5, 0, 0, 0]
-    # ])
+    sudoku = Sudoku([
+        [7, 9, 0, 0, 1, 3, 6, 0, 0],
+        [4, 0, 0, 0, 7, 0, 3, 0, 0],
+        [1, 0, 0, 2, 4, 0, 9, 7, 5],
+        [5, 0, 0, 6, 0, 0, 2, 0, 7],
+        [0, 7, 0, 0, 0, 1, 8, 0, 0],
+        [8, 0, 6, 9, 2, 0, 5, 0, 0],
+        [6, 0, 1, 0, 0, 2, 0, 5, 3],
+        [3, 0, 0, 0, 0, 0, 4, 0, 9],
+        [0, 2, 4, 0, 3, 5, 0, 0, 0]
+    ])
 
     # slow cases:
     # sudoku = Sudoku("4.....8.5.3..........7......2.....6.....8.4......1.......6.3.7.5..2.....1.4......")
     # https://en.wikipedia.org/wiki/File:Sudoku_puzzle_hard_for_brute_force.svg
-    sudoku = Sudoku("..............3.85..1.2.......5.7.....4...1...9.......5......73..2.1........4...9")
+    # sudoku = Sudoku("..............3.85..1.2.......5.7.....4...1...9.......5......73..2.1........4...9")
     # Not enough unique values:
     # sudoku = Sudoku(".....5.8....6.1.43..........1.5........1.6...3.......553.....61........4.........")
     # sudoku = Sudoku("9..8...........5............2..1...3.1.....6....4...7.7.86.........3.1..4.....2..")
 
     print(f"{sudoku:color}")
+    print(sudoku.to_string())
     print("-" * 25)
     start = time.time()
 
