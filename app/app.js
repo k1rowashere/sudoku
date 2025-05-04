@@ -142,7 +142,6 @@ function exportString() {
 
 function solve() {
   eel.solve_sudoku(exportString().given)(function (result) {
-    console.log(result);
     const {status, solution} = result;
 
     // TODO: print status (solved, unsolved, invalid)
@@ -195,6 +194,10 @@ function checkSolution() {
   });
 }
 
+function generatePuzzle(emptyCount) {
+  eel.generate(emptyCount)(importString);
+}
+
 
 document.addEventListener('DOMContentLoaded', function () {
   const numButtons = document.querySelectorAll('.num-btn');
@@ -213,6 +216,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const importButton = document.getElementById('import-btn');
   const exportButton = document.getElementById('export-btn');
 
+
+  const generateButton = document.getElementById('generate-btn')
+  const difficultySelector = document.getElementById('difficulty')
+
   clearButton.addEventListener('click', () => handleInput(gameState.selectedCells, 0));
   undoButton.addEventListener('click', () => handleUndoRedo(gameState.undoList, gameState.redoList));
   redoButton.addEventListener('click', () => handleUndoRedo(gameState.redoList, gameState.undoList));
@@ -226,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
   importButton.addEventListener('click', () => {
-    handleInput(sudokuCells, 0); // clear the board
+    handleInput(sudokuCells, 0, 'edit'); // clear the board
     importString(importInput.value, true)
   });
 
@@ -241,6 +248,21 @@ document.addEventListener('DOMContentLoaded', function () {
       const number = parseInt(this.dataset.value);
       handleInput(gameState.selectedCells, number);
     });
+  });
+
+  generateButton.addEventListener('click', () => {
+    handleInput(sudokuCells, 0, 'edit'); // clear the board
+    switch (difficultySelector.value) {
+      case 'easy':
+        generatePuzzle(81 - 45);
+        break;
+      case 'medium':
+        generatePuzzle(81 - 30);
+        break;
+      case 'hard':
+        generatePuzzle(81 - 17);
+        break;
+    }
   });
 
   // Selection

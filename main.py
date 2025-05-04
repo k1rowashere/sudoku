@@ -37,5 +37,12 @@ def solve_sudoku(sudoku_string):
         }
 
 
+@eel.expose
+def generate(numEmpty):
+    sudoku = Sudoku()
+    sudoku.generate_k_empty(numEmpty)
+    return sudoku.to_string()
+
+
 if __name__ == "__main__":
     main()
