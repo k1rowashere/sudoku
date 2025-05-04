@@ -1,8 +1,17 @@
+import subprocess
+
 import eel
 from sudoku import Sudoku
 
 
 def main():
+    # run tailwindcss build
+    res = subprocess.call(["tailwindcss", "-i", "app/style_input.css", "-o", "app/style.css", "--minify"], shell=True)
+    if res != 0:
+        print("Error running tailwindcss, make sure it is installed")
+        print("Did you run npm install?")
+        return
+
     eel.init("app")
     eel.start("pages/index.html", size=(980, 700), jinja_templates="pages")
 
