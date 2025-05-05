@@ -353,8 +353,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const selector = `.sudoku-cell[data-row="${(newRow % 9 + 9) % 9}"][data-col="${(newCol % 9 + 9) % 9}"]`;
         const newCell = document.querySelector(selector);
         if (newCell) {
-          cell.classList.remove('!bg-blue-200', '!border-blue-500');
-          newCell.classList.add('!bg-blue-200', '!border-blue-500');
+          cell.classList.remove('!bg-blue-200');
+          newCell.classList.add('!bg-blue-200');
           gameState.selectedCells.clear();
           gameState.selectedCells.add(newCell);
         }

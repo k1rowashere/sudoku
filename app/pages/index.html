@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sudoku</title>
     <link href="../style.css" rel="stylesheet">
+    <link href="../assets/favicon.png" rel="icon" type="image/png">
     <script type="text/javascript" src="/eel.js"></script>
     <script src="../app.js"></script>
 </head>
@@ -34,14 +35,30 @@
 
     <div class="mt-6 flex flex-col items-center space-y-4">
         <!-- Numpad and Mode Selector -->
-        <div class="flex items-start space-x-4">
+        <div class="flex items-start space-x-4 group">
             <!-- Numpad -->
             <div class="grid grid-cols-3 gap-2">
-                {% for num in range(1, 10) %}
+                {% for num in range(9) %}
                     <button class="num-btn active:scale-95 w-12 h-12 bg-gray-200 hover:bg-gray-300
                                    rounded flex items-center justify-center text-xl font-medium"
-                            data-value="{{ num }}">
-                        {{ num }}
+                            data-value="{{ num + 1 }}">
+                        <span class="group-has-[input:checked[value='pencil']]:hidden ">
+                            {{ num + 1 }}
+                        </span>
+                        <div class="group-has-[input:checked[value='pencil']]:grid hidden grid-cols-3 grid-rows-3 w-full h-full p-4 text-sm items-center text-center">
+                            <div style="grid-row: {{ num // 3 + 1 }}; grid-column: {{ num % 3 + 1 }}">
+                                {{ num + 1 }}
+                            </div>
+                        </div>
+                    </button>
+                {% endfor %}
+                {% set buttons = ['undo', 'redo', 'backspace'] %}
+
+                {% for btn in buttons %}
+                    <button id="{{ btn }}-btn"
+                            class="active:scale-95 px-2 py-2 bg-gray-200 hover:bg-gray-300 rounded"
+                            title="{{ btn }}">
+                        <img src="../assets/{{ btn }}.svg" alt="{{ btn }}" class="h-8 w-8">
                     </button>
                 {% endfor %}
             </div>
@@ -56,37 +73,17 @@
                                 {{ 'checked' if loop.first else '' }}
                                class="hidden peer">
                         <span class="w-12 h-12 rounded flex items-center justify-center
-                                    transition-colors peer-checked:bg-blue-500 peer-checked:text-white
-                                    peer-checked:hover:bg-blue-700 bg-gray-200 hover:bg-gray-300"
+                                    transition-colors peer-checked:bg-blue-300 peer-checked:text-white
+                                    peer-checked:hover:bg-blue-400 bg-gray-200 hover:bg-gray-300"
                         >
-                            <img src="/static/images/{{ mode }}.png" alt="{{ mode }}" class="h-6 w-6">
+                            <img src="../assets/{{ mode }}.svg" alt="{{ mode }}" class="h-8 w-8">
                         </span>
                     </label>
                 {% endfor %}
             </div>
         </div>
         <!-- Action Buttons -->
-        <div class="flex space-x-2">
-            <button id="undo-btn"
-                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded flex items-center space-x-1"
-                    title="Undo">
-                <img src="/static/images/undo-icon.png" alt="Undo" class="h-5 w-5">
-                <span>Undo</span>
-            </button>
-            <button id="redo-btn"
-                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded flex items-center space-x-1"
-                    title="Redo">
-                <img src="/static/images/redo-icon.png" alt="Redo" class="h-5 w-5">
-                <span>Redo</span>
-            </button>
-            <button id="backspace-btn"
-                    class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded flex items-center space-x-1 active:scale-95"
-                    title="Clear Cell"
-            >
-                <img src="/static/images/clear-icon.png" alt="Clear" class="h-5 w-5">
-                <span>Clear</span>
-            </button>
-        </div>
+        <div class="flex space-x-2"></div>
 
 
         <div class="grid grid-cols-3 justify-center gap-2">
