@@ -52,6 +52,7 @@ class Sudoku:
                     self.grid[x] = 1 << (self.initial_grid[x] - 1)
                 else:
                     self.grid[x] = 0b1_1111_1111
+            self.prune_domains()
 
     def __str__(self):
         return self.__format__(self)
@@ -139,23 +140,25 @@ class Sudoku:
         return True
 
     def prune_domains(self):
-    # Remove impossible values from empty cells based on row/column/box constraints."""
-       
+        """Remove impossible values based on SINGLETON cells in row/column/box."""
         for i, j in np.ndindex(9, 9):
-            if self.grid[i, j].bit_count() != 1:  # Only prune empty/multi-value cells
-                # Collect forbidden values from row/column/box
-                print("here ")
+            if self.grid[i, j].bit_count() != 1:  # Only prune non-singleton cells
                 forbidden = 0
-                for x in range(9):
-                    forbidden |= self.grid[i, x]  # Row constraints
-                    forbidden |= self.grid[x, j]  # Column constraints
                 
-                # Box constraints
+                # Check row and column for SINGLETONS only
+                for x in range(9):
+                    if self.grid[i, x].bit_count() == 1:  # Row constraints
+                        forbidden |= self.grid[i, x]
+                    if self.grid[x, j].bit_count() == 1:  # Column constraints
+                        forbidden |= self.grid[x, j]
+                
+                # Check box for SINGLETONS only
                 box_i, box_j = (i // 3) * 3, (j // 3) * 3
                 for x, y in np.ndindex(3, 3):
-                    forbidden |= self.grid[box_i + x, box_j + y]
+                    if self.grid[box_i + x, box_j + y].bit_count() == 1:
+                        forbidden |= self.grid[box_i + x, box_j + y]
                 
-                # Remove forbidden values (keep only possible ones)
+                # Apply pruning
                 self.grid[i, j] &= ~forbidden
                 
                 # Early exit if any cell becomes empty
@@ -372,7 +375,7 @@ class Sudoku:
                 for i in range(9):
                     for j in range(9):
                         if self.initial_grid[i, j] == 0:
-                            self.initial_grid[i, j] = 511
+                            self.initial_grid[i, j] = 0
 
                 return self
 
