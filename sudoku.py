@@ -22,7 +22,7 @@ def fn(x):
 
 COUNT_BITS_VECT = np.vectorize(fn)
 
-ENABLE_LOGGING = False
+ENABLE_LOGGING = True
 
 
 class Sudoku:
@@ -138,7 +138,34 @@ class Sudoku:
 
         return True
 
+    def prune_domains(self):
+    # Remove impossible values from empty cells based on row/column/box constraints."""
+       
+        for i, j in np.ndindex(9, 9):
+            if self.grid[i, j].bit_count() != 1:  # Only prune empty/multi-value cells
+                # Collect forbidden values from row/column/box
+                print("here ")
+                forbidden = 0
+                for x in range(9):
+                    forbidden |= self.grid[i, x]  # Row constraints
+                    forbidden |= self.grid[x, j]  # Column constraints
+                
+                # Box constraints
+                box_i, box_j = (i // 3) * 3, (j // 3) * 3
+                for x, y in np.ndindex(3, 3):
+                    forbidden |= self.grid[box_i + x, box_j + y]
+                
+                # Remove forbidden values (keep only possible ones)
+                self.grid[i, j] &= ~forbidden
+                
+                # Early exit if any cell becomes empty
+                if self.grid[i, j] == 0:
+                    return False
+        return True
+
     def solve(self, changed_cell: tuple[int, int] = None) -> SolutionState:
+        # if not self.prune_domains():
+        #     return self.SolutionState.NoSolution
         # use ac3 to reduce the search space
         if changed_cell is not None:
             res = self.ac3_optimized(self.grid, WORKLISTS[changed_cell[0] * 9 + changed_cell[1]])
@@ -234,11 +261,13 @@ class Sudoku:
                 if ENABLE_LOGGING:
                     bit_to_num = {1 << i: i + 1 for i in range(9)}
                     removed_value = bit_to_num[y_val]
-                    x_domain_before = [bit_to_num[1 << k] for k in range(9) if domains[x] & (1 << k)]
-                    x_domain_after = [bit_to_num[1 << k] for k in range(9) if domains[x] & (1 << k)]
+                    x_domain_before = [k + 1 for k in range(9) if domains[x] & (1 << k)]
+                    # x_domain_after = [bit_to_num[1 << k] for k in range(9) if domains[x] & (1 << k)]
+                    x_domain_after = [x for x in x_domain_before if domains[y] & (1 << x-1) ==0]
                     print(f"Revising arc ({x}, {y})")
                     print(f"Current domain of {x}: {x_domain_before}")
                     print(f"Domain of {y}: [{removed_value}]")
+                    print(f"Removed value {removed_value} from {x} because no supporting value exists in{y}")
                     print(f"Updated domain of {x}: {x_domain_after}\n\n")
 
                 # Remove y's value from x's domain
@@ -373,9 +402,9 @@ def main():
     # intermediate
     # sudoku = Sudoku(".2.6.8...58...97......4....37....5..6.......4..8....13....2......98...36...3.6.9.")
     # easy -- > unique
-    # sudoku = Sudoku("...26.7.168..7..9.19...45..82.1...4...46.29...5...3.28..93...74.4..5..367.3.18...")
+    sudoku = Sudoku("...26.7.168..7..9.19...45..82.1...4...46.29...5...3.28..93...74.4..5..367.3.18...")
 
-    sudoku = Sudoku().generate_k_empty(81 - 17)
+    # sudoku = Sudoku().generate_k_empty(30)
 
     print(f"{sudoku:color}")
     print(sudoku.to_string())
