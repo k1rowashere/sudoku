@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
   redoButton.addEventListener('click', () => handleUndoRedo(gameState.redoList, gameState.undoList));
 
   solveButton.addEventListener('click', () => {
-    handleInput(sudokuCells, 0); // clear the board
+    handleInput(sudokuCells, 0, 'final'); // clear the board
     solve();
   });
   clearAllButton.addEventListener('click', () => handleInput(sudokuCells, 0));

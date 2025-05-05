@@ -15,14 +15,14 @@ NEIGHBORS = tuple([[x[0] for x in xs] for xs in WORKLISTS])
 WORKLIST = tuple([x for xs in WORKLISTS for x in xs])
 
 
-def fn(x):
+def mrv(x):
     count = x.bit_count()
     return count if count != 1 else 10
 
 
-COUNT_BITS_VECT = np.vectorize(fn)
+COUNT_BITS_VECT = np.vectorize(mrv)
 
-ENABLE_LOGGING = True
+ENABLE_LOGGING = False
 
 
 class Sudoku:
@@ -52,7 +52,6 @@ class Sudoku:
                     self.grid[x] = 1 << (self.initial_grid[x] - 1)
                 else:
                     self.grid[x] = 0b1_1111_1111
-            self.prune_domains()
 
     def __str__(self):
         return self.__format__(self)
@@ -108,67 +107,14 @@ class Sudoku:
             for j in range(9):
                 if self.grid[i, j].bit_count() != 1:
                     return False
-        return self.ac3_optimized(self.grid)
+        return self.ac3_optimized(self.grid.copy())
 
     class SolutionState(Enum):
         NoSolution = 0
         UniqueSolution = 1
         MultipleSolutions = 2,
 
-    def forward_checking(self, cell: tuple[int, int], assignedValue: int) -> bool:
-        """
-        Performs forward checking after assigning a value to a cell.
-        Returns False if any neighbor's domain becomes empty.
-        """
-        valueBit = 1 << (assignedValue - 1)
-        neighbors = NEIGHBORS[cell[0] * 9 + cell[1]]
-
-        for neighbor in neighbors:
-            # skip assigned cells
-            if self.grid[neighbor].bit_count() == 1:
-                continue
-
-            # neighbor's domain contains the assigned value
-            if self.grid[neighbor] & valueBit:
-                # remove the value from neighbor's domain
-                self.grid[neighbor] &= ~valueBit
-
-                #  domain empty, return failure
-                if self.grid[neighbor] == 0:
-                    return False
-
-        return True
-
-    def prune_domains(self):
-        """Remove impossible values based on SINGLETON cells in row/column/box."""
-        for i, j in np.ndindex(9, 9):
-            if self.grid[i, j].bit_count() != 1:  # Only prune non-singleton cells
-                forbidden = 0
-                
-                # Check row and column for SINGLETONS only
-                for x in range(9):
-                    if self.grid[i, x].bit_count() == 1:  # Row constraints
-                        forbidden |= self.grid[i, x]
-                    if self.grid[x, j].bit_count() == 1:  # Column constraints
-                        forbidden |= self.grid[x, j]
-                
-                # Check box for SINGLETONS only
-                box_i, box_j = (i // 3) * 3, (j // 3) * 3
-                for x, y in np.ndindex(3, 3):
-                    if self.grid[box_i + x, box_j + y].bit_count() == 1:
-                        forbidden |= self.grid[box_i + x, box_j + y]
-                
-                # Apply pruning
-                self.grid[i, j] &= ~forbidden
-                
-                # Early exit if any cell becomes empty
-                if self.grid[i, j] == 0:
-                    return False
-        return True
-
     def solve(self, changed_cell: tuple[int, int] = None) -> SolutionState:
-        # if not self.prune_domains():
-        #     return self.SolutionState.NoSolution
         # use ac3 to reduce the search space
         if changed_cell is not None:
             res = self.ac3_optimized(self.grid, WORKLISTS[changed_cell[0] * 9 + changed_cell[1]])
@@ -266,7 +212,7 @@ class Sudoku:
                     removed_value = bit_to_num[y_val]
                     x_domain_before = [k + 1 for k in range(9) if domains[x] & (1 << k)]
                     # x_domain_after = [bit_to_num[1 << k] for k in range(9) if domains[x] & (1 << k)]
-                    x_domain_after = [x for x in x_domain_before if domains[y] & (1 << x-1) ==0]
+                    x_domain_after = [x for x in x_domain_before if domains[y] & (1 << x - 1) == 0]
                     print(f"Revising arc ({x}, {y})")
                     print(f"Current domain of {x}: {x_domain_before}")
                     print(f"Domain of {y}: [{removed_value}]")
@@ -286,6 +232,12 @@ class Sudoku:
         return True
 
     def generate_k_empty(self, k):
+        """
+            Generate a Sudoku with exactly k empty cells.
+            :param k: number of empty cells
+            :return: self
+        """
+
         def fill_diagonal():
             # fill diagonal boxes
             for k in range(0, 9, 3):
@@ -357,7 +309,6 @@ class Sudoku:
                     self.grid[i, j] = backup  # Restore if removal breaks solv-ability
             return self
 
-        """Generate a Sudoku with exactly k empty cells."""
         while True:
             fill_diagonal()
             fill_remaining()
